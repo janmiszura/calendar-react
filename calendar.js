@@ -1,33 +1,5 @@
 'use strict';
 
-Date.prototype.getWeekOfTheYear = function () {
-
-    // Create a copy of this date object  
-    var target = new Date(this.valueOf());
-
-    // ISO week date weeks start on monday, so correct the day number  
-    var dayNr = (this.getDay() + 6) % 7;
-
-    // Set the target to the thursday of this week so the  
-    // target date is in the right year  
-    target.setDate(target.getDate() - dayNr + 3);
-
-    // ISO 8601 states that week 1 is the week with january 4th in it  
-    var jan4 = new Date(target.getFullYear(), 0, 4);
-
-    // Number of days between target date and january 4th  
-    var dayDiff = (target - jan4) / 86400000;
-
-    if (new Date(target.getFullYear(), 0, 1).getDay() < 5) {
-        // Calculate week number: Week 1 (january 4th) plus the    
-        // number of weeks between target date and january 4th    
-        return 1 + Math.ceil(dayDiff / 7);
-    }
-    else {  // jan 4th is on the next week (so next week is week 1)
-        return Math.ceil(dayDiff / 7);
-    }
-};
-
 Date.isLeapYear = function (year) {
     return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0));
 };
@@ -52,57 +24,72 @@ Date.prototype.addMonths = function (value) {
     return this;
 };
 
-class Dia extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            dia: props.dia
-        }
-        console.log('dia', this.state.dia);
+function startOfWeek(year, month, day) {
+	let date = new Date(year, month-1, day);
+	let diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+  return new Date(date.getFullYear(), date.getMonth(), diff);
+}
+
+function weeksOfTheMonth(year, month) {
+  let weeks = [];
+  for(var i=0;i<6;i++) {
+  	let startWeek = startOfWeek(year, month, 7*i);
+    let datesOfWeeks = [];
+    datesOfWeeks.push( startWeek );
+    for(var j=1;j<=6;j++) {
+    	let date = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate()+j);
+      datesOfWeeks.push( date );
     }
+    
+    if( i == 0 ) {
+    	weeks.push( datesOfWeeks );
+    } else {
+      let dateFlag = datesOfWeeks[0];
+    	let yearFlag = dateFlag.getFullYear();
+      let monthFlag = dateFlag.getMonth();
+      if( year === yearFlag && (month-1) === monthFlag ) {
+      	weeks.push( datesOfWeeks );
+      }
+    }
+      	
+  }
+	return weeks;
+}
+
+class Dia extends React.Component {
 
     render() {
         return (
-            <td>X</td>
+            <td>{this.props.dia.getDate()}</td>
         );
     }
 
 }
 
 class Semana extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            ano: props.ano,
-            mes: props.mes,
-            semana: props.semana
+    
+    renderDias() {
+        let dias = [];
+        for(let i=0;i<this.props.dias.length;i++) {
+            let dia = this.props.dias[i];
+            dias.push(
+                <Dia dia={dia}/>
+            );
         }
-        console.log('semana', this.state);
-    }
-
-    diaInicio = () => {
-
-
-
+        return dias;
     }
 
     render() {
         return (
             <tr>
-                <Dia />
-                <Dia />
-                <Dia />
-                <Dia />
-                <Dia />
-                <Dia />
-                <Dia />
+                {this.renderDias()}
             </tr>
         );
     }
 
 }
 
-class CalendarioDiario extends React.Component {
+class Calendar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -111,46 +98,23 @@ class CalendarioDiario extends React.Component {
         };
     }
 
-    getWeekStart = (year, month_number) => {
-
-        // month_number is in the range 1..12
-
-        let inicioMes = new Date(year, month_number - 1, 1);
-
-        let week = inicioMes.getWeekOfTheYear();
-
-        return week;
-    }
-
-    getWeekEnd = (year, month_number) => {
-
-        // month_number is in the range 1..12
-
-        let fimMes = new Date(year, month_number, 0);
-
-        let week = fimMes.getWeekOfTheYear();
-
-        console.log('fimMes:', fimMes, 'week:', week);
-
-        return week;
-    }
-
     renderSemanas() {
 
-        let semanas = [];
+        let weeksToRender = [];
+        let semanas = weeksOfTheMonth(this.state.ano, this.state.mes);
 
-        const weekStart = this.getWeekStart(this.state.ano, this.state.mes);
-        const weekEnd = this.getWeekEnd(this.state.ano, this.state.mes);
-
-        console.log(this.state.mes + '/' + this.state.ano, 'weekStart:', weekStart, 'weekEnd:', weekEnd);
-
-        for (let i = weekStart; i <= weekEnd; i++) {
-            semanas.push(
-                <Semana ano={this.state.ano} mes={this.state.mes} semana={i} />
+        for(let i=0;i<semanas.length;i++) {
+            let semana = semanas[i];
+            weeksToRender.push(
+                <Semana 
+                    ano={this.state.ano} 
+                    mes={this.state.mes} 
+                    dias={semana} 
+                />
             );
         }
 
-        return semanas;
+        return weeksToRender;
     }
 
     mesAnterior() {
@@ -160,8 +124,9 @@ class CalendarioDiario extends React.Component {
         this.setState({
             ano: date.getFullYear(),
             mes: date.getMonth() + 1
+        }, function() {
+            console.log('mesAnterior', date, this.state);
         });
-        //console.log('mesAnterior', date, this.state);
     }
 
     proximoMes() {
@@ -171,8 +136,9 @@ class CalendarioDiario extends React.Component {
         this.setState({
             ano: date.getFullYear(),
             mes: date.getMonth() + 1
+        }, function(){
+            console.log('proximoMes', date, this.state);
         });
-        //console.log('proximoMes', date, this.state);
     }
 
     mesAno() {
@@ -207,13 +173,13 @@ class CalendarioDiario extends React.Component {
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Domingo</th>
                                 <th>Segunda</th>
                                 <th>Ter&ccedil;a</th>
                                 <th>Quarta</th>
                                 <th>Quinta</th>
                                 <th>Sexta</th>
                                 <th>S&aacute;bado</th>
+                                <th>Domingo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -230,6 +196,6 @@ class CalendarioDiario extends React.Component {
 }
 
 ReactDOM.render(
-    <CalendarioDiario />,
+    <Calendar />,
     document.getElementById('root')
 );
