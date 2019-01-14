@@ -56,33 +56,33 @@ function weeksOfTheMonth(year, month) {
 	return weeks;
 }
 
-class Dia extends React.Component {
+class DayOfWeek extends React.Component {
 
     render() {
         return (
-            <td>{this.props.dia.getDate()}</td>
+            <td>{this.props.date.getDate()}</td>
         );
     }
 
 }
 
-class Semana extends React.Component {
+class Week extends React.Component {
     
-    renderDias() {
-        let dias = [];
-        for(let i=0;i<this.props.dias.length;i++) {
-            let dia = this.props.dias[i];
-            dias.push(
-                <Dia dia={dia}/>
+    renderDays() {
+        let days = [];
+        for(let i=0;i<this.props.days.length;i++) {
+            let day = this.props.days[i];
+            days.push(
+                <DayOfWeek date={day}/>
             );
         }
-        return dias;
+        return days;
     }
 
     render() {
         return (
             <tr>
-                {this.renderDias()}
+                {this.renderDays()}
             </tr>
         );
     }
@@ -93,23 +93,21 @@ class Calendar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            ano: 2019,
-            mes: 1
+            year: 2019,
+            month: 1
         };
     }
 
-    renderSemanas() {
+    renderWeeks() {
 
         let weeksToRender = [];
-        let semanas = weeksOfTheMonth(this.state.ano, this.state.mes);
+        let weeks = weeksOfTheMonth(this.state.year, this.state.month);
 
-        for(let i=0;i<semanas.length;i++) {
-            let semana = semanas[i];
+        for(let i=0;i<weeks.length;i++) {
+            let week = weeks[i];
             weeksToRender.push(
-                <Semana 
-                    ano={this.state.ano} 
-                    mes={this.state.mes} 
-                    dias={semana} 
+                <Week 
+                    days={week} 
                 />
             );
         }
@@ -117,32 +115,32 @@ class Calendar extends React.Component {
         return weeksToRender;
     }
 
-    mesAnterior() {
-        let date = new Date(this.state.ano, this.state.mes - 1, 1);
-        //console.log('mesAnterior antes', date, this.state);
+    previousMonth() {
+        let date = new Date(this.state.year, this.state.month - 1, 1);
+        
         date.addMonths(-1);
         this.setState({
-            ano: date.getFullYear(),
-            mes: date.getMonth() + 1
+            year: date.getFullYear(),
+            month: date.getMonth() + 1
         }, function() {
-            console.log('mesAnterior', date, this.state);
+            console.log('previousMonth', date, this.state);
         });
     }
 
-    proximoMes() {
-        let date = new Date(this.state.ano, this.state.mes - 1, 1);
-        //console.log('proximoMes antes', date, this.state);
+    nextMonth() {
+        let date = new Date(this.state.year, this.state.month - 1, 1);
+        
         date.addMonths(1);
         this.setState({
-            ano: date.getFullYear(),
-            mes: date.getMonth() + 1
+            year: date.getFullYear(),
+            month: date.getMonth() + 1
         }, function(){
-            console.log('proximoMes', date, this.state);
+            console.log('nextMonth', date, this.state);
         });
     }
 
-    mesAno() {
-        return this.state.mes + '/' + this.state.ano;
+    monthYear() {
+        return this.state.month + '/' + this.state.year;
     }
 
     render() {
@@ -155,13 +153,13 @@ class Calendar extends React.Component {
                 <div class="row">
                     <div class="col-md-12">
                         <div class="btn-group">
-                            <a href="javascript:;" onClick={this.mesAnterior.bind(this)} class="btn btn-default btn-sm">
+                            <a href="javascript:;" onClick={this.previousMonth.bind(this)} class="btn btn-default btn-sm">
                                 <i class="glyphicon glyphicon-chevron-left"></i>
                             </a>
                             <a disabled class="btn btn-default btn-sm">
-                                {this.mesAno()}
+                                {this.monthYear()}
                             </a>
-                            <a href="javascript:;" onClick={this.proximoMes.bind(this)} class="btn btn-default btn-sm">
+                            <a href="javascript:;" onClick={this.nextMonth.bind(this)} class="btn btn-default btn-sm">
                                 <i class="glyphicon glyphicon-chevron-right"></i>
                             </a>
                         </div>
@@ -173,17 +171,17 @@ class Calendar extends React.Component {
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Segunda</th>
-                                <th>Ter&ccedil;a</th>
-                                <th>Quarta</th>
-                                <th>Quinta</th>
-                                <th>Sexta</th>
-                                <th>S&aacute;bado</th>
-                                <th>Domingo</th>
+                                <th>Monday</th>
+                                <th>tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                                <th>Saturday</th>
+                                <th>Sunday</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {this.renderSemanas()}
+                            {this.renderWeeks()}
                         </tbody>
                     </table>
                 </div>
